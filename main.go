@@ -30,12 +30,14 @@ func init() {
 	flag.StringVar(&domain, "d", "", "Single target domain")
 	flag.StringVar(&listFile, "l", "", "File containing list of domains")
 	flag.StringVar(&outputFile, "o", "", "File to write output to")
-	flag.BoolVar(&silent, "silent", false, "Show only results in output (hide banner)")
+	flag.BoolVar(&silent, "silent", false, "Silent mode (no terminal output)")
 	flag.IntVar(&timeout, "t", 7, "API Timeout in seconds")
 	flag.IntVar(&concurrency, "c", 10, "Maximum concurrency for processing multiple domains")
 
 	flag.Usage = func() {
-		showBanner()
+		if !silent {
+			showBanner()
+		}
 		fmt.Fprintf(os.Stderr, "Usage:\n  shiro [flags]\n\nFlags:\n")
 		flag.PrintDefaults()
 	}
@@ -97,7 +99,9 @@ func main() {
 		defer outWg.Done()
 		for sub := range results {
 			if _, exists := uniqueDomains.LoadOrStore(sub, true); !exists {
-				fmt.Println(sub)
+				if !silent {
+					fmt.Println(sub)
+				}
 				if outWriter != nil {
 					outWriter.WriteString(sub + "\n")
 				}
